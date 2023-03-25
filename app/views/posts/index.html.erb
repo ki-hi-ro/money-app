@@ -11,9 +11,12 @@
         </li>
       </ul>
     </header>
-<div class="main top-main">
-  <div class="top-message">
-    <h2>あなたのお金を管理するアプリ</h2>
-    <p>支出・貯金・収入を可視化しよう！</p>
+<div class="main posts-index">
+  <div class="container">
+    <% @posts.each do |post| %>
+      <div class="posts-index-item">
+        <%= post.content %>
+      </div>
+    <% end %>
   </div>
 </div>
