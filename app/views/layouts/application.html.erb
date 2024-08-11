@@ -11,6 +11,19 @@
   </head>
 
   <body>
+    <header>
+      <div class="header-logo">
+        <%= link_to("MoneyApp","/") %>
+      </div>
+      <ul class="header-menus">
+        <li>
+          <%= link_to("MoneyAppとは","/about") %>
+        </li>
+        <li>
+          <%= link_to("支出・収入・貯金","/posts/index") %>
+        </li>
+      </ul>
+    </header>
     <%= yield %>
   </body>
 </html>
