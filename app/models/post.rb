@@ -1,3 +1,5 @@
 class Post < ApplicationRecord
-  @posts = Post.all
+  def index
+    @posts = Post.all
+  end
 end
