@@ -7,7 +7,7 @@ class PostsController < ApplicationController
   end
 
   def create
-    @post = Post.new(content: params[:name])
+    @post = Post.new(content: params[:name], date: params[:date], price: params[:price])
     @post.save
     redirect_to("/posts/index")
   end
