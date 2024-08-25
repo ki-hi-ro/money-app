@@ -1,0 +1,12 @@
+<div class="expense-form">
+  <h2>支出</h2>
+  <%= form_tag("/posts/create") do %>
+      <label for="name">いくら</label>
+    <input type="text" id="name" name="name" />
+    <label for="name">何に</label>
+    <input type="text" id="name" name="name" />
+    <label for="name">いくら</label>
+    <input type="text" id="name" name="name" />
+    <input class="expense-form_btn" type="submit" value="記録" />
+  <% end %>
+</div>

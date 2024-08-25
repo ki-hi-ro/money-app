@@ -94,3 +94,10 @@
   font-size: 24px;
   opacity: 0.5;
 }
+
+.expense-form {
+  padding: 100px 20px;
+  &_btn {
+    cursor: pointer;
+  }
+}
