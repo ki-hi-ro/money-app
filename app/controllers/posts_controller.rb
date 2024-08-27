@@ -11,4 +11,12 @@ class PostsController < ApplicationController
     @post.save
     redirect_to("/posts/index")
   end
+
+  def show
+  end
+
+  def destroy
+    @post = Post.find(params[:id])
+    @post.destroy
+  end
 end

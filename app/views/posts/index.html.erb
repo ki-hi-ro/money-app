@@ -5,6 +5,7 @@
         <%= post.date %>
         <%= post.content %>
         <%= post.price %>
+        <%= link_to '削除', "/posts/#{post.id}", data: { turbo_method: :delete } %> 
       </div>
     <% end %>
   </div>
