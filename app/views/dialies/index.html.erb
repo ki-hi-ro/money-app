@@ -1,0 +1,14 @@
+<p style="color: green"><%= notice %></p>
+
+<h1>Dialies</h1>
+
+<div id="dialies">
+  <% @dialies.each do |dialy| %>
+    <%= render dialy %>
+    <p>
+      <%= link_to "Show this dialy", dialy %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New dialy", new_dialy_path %>

@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @dialy %>
+
+<div>
+  <%= link_to "Edit this dialy", edit_dialy_path(@dialy) %> |
+  <%= link_to "Back to dialies", dialies_path %>
+
+  <%= button_to "Destroy this dialy", @dialy, method: :delete %>
+</div>

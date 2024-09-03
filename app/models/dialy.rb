@@ -1,0 +1,2 @@
+class Dialy < ApplicationRecord
+end

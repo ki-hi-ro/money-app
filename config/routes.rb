@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :dialies
   get '/' => "home#top"
   get '/about' => "home#about"
   get '/posts/index' => "posts#index"
