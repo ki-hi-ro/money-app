@@ -1,0 +1,14 @@
+<% if entries.empty? %>
+  <p class="muted">該当する明細はありません。</p>
+<% else %>
+  <ul class="income-entry-list">
+    <% entries.each do |entry| %>
+      <li><div><time datetime="<%= entry.date.iso8601 %>"><%= entry.date.strftime("%Y/%m/%d") %></time><span class="badge"><%= entry.status %></span></div>
+        <div><%= link_to entry.description, edit_finance_entry_path(entry) %><strong><%= money(@forecast.ledger.amount(entry)) %></strong></div>
+        <% if entry.card_debit? && !entry.card_confirmed_amount.nil? %>
+          <small>カード確認額 <%= money(entry.card_confirmed_amount) %> ／ 利用記録合計 <%= money(@forecast.ledger.recorded_card_total(entry)) %></small>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+<% end %>

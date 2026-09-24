@@ -1,0 +1,8 @@
+<div class="finance-heading"><h1>月次残高を記録</h1><%= link_to "一覧へ戻る", finance_snapshots_path %></div>
+<section class="finance-card form-card"><p class="muted">新規登録時は現在の資産残高を入力済みにします。過去の記録には、その月の残高を入力してください。空欄は元シートの「−」に相当します。</p>
+<%= form_with model: @record, url: (@record.persisted? ? finance_snapshot_path(@record) : finance_snapshots_path) do |f| %>
+<% if @record.errors.any? %><p role="alert" class="finance-notice alert"><%= @record.errors.full_messages.join(" / ") %></p><% end %>
+<%= f.label :month, "年月" %><%= f.month_field :month, value: @record.month&.strftime("%Y-%m"), required: true %>
+<div class="finance-form-grid"><% @record.balances.each_with_index do |(name, balance), index| %><div><%= label_tag "snapshot_balance_#{index}", name %><%= number_field_tag "asset_snapshot[balances][#{name}]", balance, id: "snapshot_balance_#{index}" %></div><% end %></div>
+<% if @record.balances.empty? %><p>先に<%= link_to "資産残高", finance_accounts_path %>を登録してください。</p><% else %><%= f.submit "保存する", class: "button" %><% end %>
+<% end %></section>

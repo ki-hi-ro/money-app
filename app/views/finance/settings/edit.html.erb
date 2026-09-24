@@ -1,0 +1,14 @@
+<div class="finance-heading"><h1>予測設定</h1></div>
+<section class="finance-card form-card">
+<%= form_with model: @user, url: finance_settings_path do |f| %>
+  <% if @user.errors.any? %><p role="alert"><%= @user.errors.full_messages.join(" / ") %></p><% end %>
+  <div class="finance-form-grid">
+    <div><%= f.label :monthly_card_budget, "毎月のカード支払見積もり（円）" %><%= f.number_field :monthly_card_budget, min: 0, max: 1000000000, step: "any", required: true %></div>
+    <div><%= f.label :monthly_living_budget, "毎月のカード以外の生活費（円）" %><%= f.number_field :monthly_living_budget, min: 0, max: 1000000000, step: 1 %></div>
+  </div>
+  <p>カード見積もりの初期値は0円です。生活費は空欄なら直近30日の完了した通常支出から計算します。0円なら生活費の自動見積もりを使いません。</p>
+  <p>通常の予定支出は生活費見積もりとの大きい方を採用します。「旅行・臨時」の予定支出とカード以外の口座引き落としは追加で差し引きます。同じ支払いを支出と引き落としの両方に登録しないでください。</p>
+  <%= f.submit "設定を保存", class: "button" %>
+<% end %>
+<p><%= link_to "カード・締め日を管理", finance_cards_path %> / <%= link_to "メールアドレス・パスワード・退会", edit_user_registration_path %></p>
+</section>

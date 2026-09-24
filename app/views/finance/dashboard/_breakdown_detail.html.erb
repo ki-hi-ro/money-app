@@ -1,0 +1,34 @@
+<% case key %>
+<% when :starting_balance %>
+  <ul class="income-entry-list">
+    <% @accounts.each do |account| %>
+      <li><div><%= link_to account.name, edit_finance_account_path(account) %><strong><%= money(account.balance) %></strong></div><small>更新日：<%= account.balance_on || "未登録" %><%= " ／ ポイントは1pt＝1円相当" if account.unit == "pt" %></small></li>
+    <% end %>
+  </ul>
+  <p class="muted">口座・現金・電子マネーなどの登録済み残高の合計です。</p>
+<% when :income %>
+  <p class="muted"><%= @forecast.base_date + 1 %> 〜 <%= row[:date] %> の収入予定</p>
+  <%= render "entry_list", entries: parts[:income_entries] %>
+  <p class="muted">日付未定・受取済みの収入は含みません。</p>
+<% when :other_debits %>
+  <p class="muted"><%= @forecast.base_date + 1 %> 〜 <%= row[:date] %> のカード以外の引き落とし・旅行や臨時の支出予定</p>
+  <%= render "entry_list", entries: parts[:other_debit_entries] %>
+  <p class="muted">確定・未確定の予定を含み、完了・日付未定は除きます。</p>
+<% when :card_cost %>
+  <p class="muted"><%= @forecast.base_date + 1 %> 〜 <%= row[:date] %> のカード引き落とし予定</p>
+  <%= render "entry_list", entries: parts[:card_entries] %>
+  <p>登録済みの合計：<%= money(parts[:card_debits]) %></p>
+  <p>通常の見積もり：<%= money(@forecast.card_monthly) %>× <%= row[:days] / 30 %>か月 ＝ <%= money(parts[:card_baseline]) %></p>
+  <p><strong>大きい方の <%= money(parts[:card_cost]) %> を採用</strong></p>
+  <p class="muted">カード確認額のある未確定の引き落としは、確認額と対象の利用記録合計の大きい方を使います。確定後は確認額を使います。</p>
+<% when :living_cost %>
+  <p>設定値または直近30日の実績 <%= money(@forecast.living_monthly) %> × <%= row[:days] / 30 %>か月 ＝ <%= money(parts[:living_baseline]) %></p>
+  <p class="muted">集計期間：<%= @forecast.base_date - 29 %> 〜 <%= @forecast.base_date %>。カード払いと「旅行・臨時」を除く支出です。完了した支出だけを集計します。</p>
+  <%= render "entry_list", entries: @forecast.living_entries if @forecast.living_automatic %>
+  <p>通常の予定支出：<%= money(parts[:planned_living]) %>。見積もりとの大きい方 <%= money(parts[:living_cost]) %> を採用します。</p>
+  <%= render "entry_list", entries: parts[:planned_living_entries] %>
+  <p class="muted">上の明細は過去の実績です。この合計を月額として将来の生活費を見積もります。</p>
+<% when :balance %>
+  <p>現在の総資産 <%= money(parts[:starting_balance]) %><br>＋ 収入 <%= money(parts[:income]) %><br>− 引き落とし <%= money(parts[:other_debits]) %><br>− カード支払い <%= money(parts[:card_cost]) %><br>− 生活費 <%= money(parts[:living_cost]) %><br>＝ <strong><%= money(parts[:balance]) %></strong></p>
+  <p class="muted">円未満の四捨五入により、表示した内訳と合計に差が出る場合があります。</p>
+<% end %>

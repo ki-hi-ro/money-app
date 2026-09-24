@@ -1,7 +1,10 @@
 require "application_system_test_case"
 
 class DialiesTest < ApplicationSystemTestCase
+  include Warden::Test::Helpers
+
   setup do
+    login_as users(:one), scope: :user
     @dialy = dialies(:one)
   end
 

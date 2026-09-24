@@ -1,0 +1,14 @@
+<% previous = @previous_forecast && @previous_forecast[key] %>
+<% if previous.nil? %>
+  <p class="forecast-comparison-empty">今回から比較開始</p>
+<% else %>
+  <% delta = value.round.to_i - previous %>
+  <p class="forecast-change <%= delta.zero? ? "unchanged" : (delta.positive? ? "increase" : "decrease") %>">
+    <% if delta.zero? %>
+      <strong>前回から変化なし</strong>
+    <% else %>
+      <strong>前回から <%= delta.positive? ? "＋" : "−" %><%= money(delta.abs) %></strong>
+      <span>変更前：<%= money(previous) %></span>
+    <% end %>
+  </p>
+<% end %>

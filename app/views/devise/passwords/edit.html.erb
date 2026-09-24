@@ -1,0 +1,8 @@
+<div class="finance-heading"><h1>新しいパスワードを設定</h1></div>
+<section class="finance-card form-card">
+<%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :put }) do |f| %>
+<%= render "devise/shared/error_messages", resource: resource %><%= f.hidden_field :reset_password_token %>
+<div class="finance-form-grid">
+<div><%= f.label :password, "パスワード（12文字以上）" %><%= f.password_field :password, autocomplete: "new-password", required: true, minlength: 12 %></div>
+<div><%= f.label :password_confirmation, "パスワード（確認）" %><%= f.password_field :password_confirmation, autocomplete: "new-password", required: true %></div>
+</div><%= f.submit "パスワードを変更", class: "button" %><% end %></section>

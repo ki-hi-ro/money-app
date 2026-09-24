@@ -1,7 +1,12 @@
 Rails.application.routes.draw do
   devise_for :users
+  namespace :finance do
+    root "dashboard#index"
+    resources :accounts, :entries, :tasks, :snapshots, :cards, except: :show
+    resource :settings, only: [:edit, :update]
+  end
   resources :dialies
-  get '/' => "home#top"
+  root "home#top"
   get '/about' => "home#about"
   get '/posts/index' => "posts#index"
   get '/posts/new/' => "posts#new"

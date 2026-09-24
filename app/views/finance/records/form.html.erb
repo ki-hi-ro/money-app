@@ -1,0 +1,9 @@
+<div class="finance-heading"><div><p class="eyebrow"><%= @title %></p><h1><%= @record.new_record? ? "新しく登録" : "記録を編集" %></h1></div><%= link_to "一覧へ戻る", collection_path %></div>
+<section class="finance-card form-card">
+<%= form_with model: @record, url: (@record.persisted? ? "#{collection_path}/#{@record.id}" : collection_path) do |f| %>
+  <% if @record.errors.any? %><div role="alert" class="finance-notice alert"><%= @record.errors.full_messages.join(" / ") %></div><% end %>
+  <div class="finance-form-grid"><% @fields.each do |key, label, type| %><div><%= f.label key, label %><% if type.is_a?(Array) %><%= f.select key, type %><% elsif type == :textarea %><%= f.text_area key, rows: 3 %><% elsif type == :checkbox %><%= f.check_box key %><% else %><%= f.public_send({text: :text_field, number: :number_field, date: :date_field, time: :time_field, month: :month_field}.fetch(type), key) %><% end %></div><% end %></div>
+  <% if @resource == :cash_entries %><p class="muted form-note">「未確定」は日付・金額を空欄にできます。カード払いは支払い区分とカードを選択してください。カード管理で先にカードを登録できます。カード照合は区分「口座引き落とし」・支払い区分「クレジットカード」でカード確認額を入力すると有効になります。未確定なら記録合計との最大値、確定・完了ならカード確認額を採用します。空欄なら金額をそのまま使います。明細の開始日・終了日は、両方空欄ならカードの締め日から計算します。休日などで支払日がずれても、実際の明細期間を指定できます。</p><% end %>
+  <%= f.submit "保存する", class: "button" %>
+<% end %>
+</section>

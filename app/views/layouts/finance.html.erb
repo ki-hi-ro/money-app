@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <title>MoneyApp | お金の見通し</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %><%= csp_meta_tag %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+  <body class="finance-app <%= "finance-home" if controller_path == "finance/dashboard" %>">
+    <nav class="finance-nav" aria-label="メインナビゲーション">
+      <%= link_to "MoneyApp", finance_root_path, class: "finance-brand" %>
+      <div class="finance-links">
+        <% [["ホーム", finance_root_path], ["入出金", finance_entries_path], ["資産残高", finance_accounts_path], ["月次資産推移", finance_snapshots_path], ["やること", finance_tasks_path], ["カード", finance_cards_path], ["設定", edit_finance_settings_path]].each do |label, path| %>
+          <%= link_to label, path, class: (request.path == path ? "active" : nil) %>
+        <% end %>
+      </div>
+      <% if user_signed_in? %><%= button_to "ログアウト", destroy_user_session_path, method: :delete, class: "finance-logout" %><% else %><%= link_to "ログイン", new_user_session_path %><% end %>
+    </nav>
+    <main class="finance-content">
+      <% flash.each do |kind, message| %><p role="status" class="finance-notice <%= kind %>"><%= message %></p><% end %>
+      <%= yield %>
+    </main>
+  </body>
+</html>

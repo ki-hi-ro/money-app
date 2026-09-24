@@ -1,9 +1,10 @@
 class DialiesController < ApplicationController
+  before_action :authenticate_user!
   before_action :set_dialy, only: %i[ show edit update destroy ]
 
   # GET /dialies or /dialies.json
   def index
-    @dialies = Dialy.all
+    @dialies = current_user.dialies
   end
 
   # GET /dialies/1 or /dialies/1.json
@@ -12,7 +13,7 @@ class DialiesController < ApplicationController
 
   # GET /dialies/new
   def new
-    @dialy = Dialy.new
+    @dialy = current_user.dialies.new
   end
 
   # GET /dialies/1/edit
@@ -21,15 +22,15 @@ class DialiesController < ApplicationController
 
   # POST /dialies or /dialies.json
   def create
-    @dialy = Dialy.new(dialy_params)
+    @dialy = current_user.dialies.new(dialy_params)
 
     respond_to do |format|
       if @dialy.save
         format.html { redirect_to dialy_url(@dialy), notice: "Dialy was successfully created." }
         format.json { render :show, status: :created, location: @dialy }
       else
-        format.html { render :new, status: :unprocessable_entity }
-        format.json { render json: @dialy.errors, status: :unprocessable_entity }
+        format.html { render :new, status: :unprocessable_content }
+        format.json { render json: @dialy.errors, status: :unprocessable_content }
       end
     end
   end
@@ -41,8 +42,8 @@ class DialiesController < ApplicationController
         format.html { redirect_to dialy_url(@dialy), notice: "Dialy was successfully updated." }
         format.json { render :show, status: :ok, location: @dialy }
       else
-        format.html { render :edit, status: :unprocessable_entity }
-        format.json { render json: @dialy.errors, status: :unprocessable_entity }
+        format.html { render :edit, status: :unprocessable_content }
+        format.json { render json: @dialy.errors, status: :unprocessable_content }
       end
     end
   end
@@ -60,7 +61,7 @@ class DialiesController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_dialy
-      @dialy = Dialy.find(params[:id])
+      @dialy = current_user.dialies.find(params[:id])
     end
 
     # Only allow a list of trusted parameters through.

@@ -1,0 +1,93 @@
+<section class="finance-photo-hero">
+  <div class="finance-photo-content">
+    <p class="hero-kicker">MoneyApp</p>
+    <h1>あなたのお金に、<br>これからの見通しを。</h1>
+    <p class="hero-description">日々の記録から、未来の家計を見えるように。</p>
+    <div class="hero-balance">
+      <p>現在の総資産</p>
+      <div class="forecast-amount"><h2><%= money(@forecast.total) %></h2><%= render "change", key: "total", value: @forecast.total %></div>
+      <p class="hero-balance-date">登録済み残高の合計 · 基準日 <%= @forecast.base_date || (@forecast.mixed_dates ? "更新日が混在" : "未登録") %></p>
+    </div>
+    <div class="finance-quick-actions">
+      <%= link_to "支出を記録", new_finance_entry_path(kind: "支出"), class: "button" %>
+      <%= link_to "今後の収入", finance_entries_path(kind: "収入", date_order: "asc"), class: "button secondary" %>
+      <%= link_to "口座残高を更新", finance_accounts_path, class: "button secondary" %>
+    </div>
+  </div>
+</section>
+<div class="section-heading forecast-section-heading"><div><p class="eyebrow">これからのお金</p><h2>将来の総資産</h2></div></div>
+<% if @forecast.base_date %>
+  <p class="muted">予定の収入と、普段の支出を含めた予測です。全口座の残高更新日（<%= @forecast.base_date %>）からの日数で表示しています。</p>
+  <% if @previous_forecast && @previous_forecast["base_date"] != @forecast.base_date.iso8601 %>
+    <p class="finance-notice">予測の基準日が <%= @previous_forecast["base_date"] || "未登録" %> から <%= @forecast.base_date %> に変わりました。差額には予測対象期間の変更も含まれます。</p>
+  <% end %>
+  <div class="forecast-grid">
+    <% @forecast_rows.each do |row| %>
+      <section class="finance-card">
+        <p class="eyebrow"><%= row[:days] %>日後 <span class="muted">/ <%= row[:date] %></span></p>
+        <div class="forecast-amount"><h2><%= money(row[:expected]) %></h2><%= render "change", key: "#{row[:days]}_expected", value: row[:expected] %></div>
+        <% delta = row[:expected].round - @forecast.total.round %>
+        <p class="muted">現在より <%= delta.positive? ? "＋" : "" %><%= money(delta) %></p>
+        <details class="forecast-breakdown">
+          <summary>計算の内訳</summary>
+          <% parts = row[:breakdown][:expected] %>
+          <dl class="forecast-calculation">
+            <% [["現在の総資産", :starting_balance], ["＋ 予定の収入", :income], ["− 引き落とし・臨時支出", :other_debits], ["− カード支払い", :card_cost], ["− カード以外の生活費", :living_cost], ["予測総資産", :balance]].each do |label, key| %>
+              <div class="income-calculation"><dt>
+                <details class="income-details">
+                  <summary><%= label %></summary>
+                  <%= render "breakdown_detail", key: key, parts: parts, row: row %>
+                </details>
+              </dt><dd><%= money(parts[key]) %></dd></div>
+            <% end %>
+          </dl>
+          <p class="muted">未確定の入出金を除くと <%= money(row[:confirmed]) %>。どちらも生活費の見積もりを含みます。</p>
+          <p class="muted">カード支払いは、通常の見積もり <%= money(parts[:card_baseline]) %> と登録済みの引き落とし <%= money(parts[:card_debits]) %> の大きい方です。</p>
+        </details>
+      </section>
+    <% end %>
+  </div>
+  <details class="finance-card" <%= "open" if params[:trial_amount].present? %>>
+    <summary>これからの行動で、いくら変わる？</summary>
+    <p class="muted">上の予測に追加する行動を試算します。試算は保存されず、入出金や口座残高も変わりません。</p>
+    <%= form_with url: finance_root_path, method: :get, class: "finance-filters" do |f| %>
+      <div><%= f.label :trial_kind, "行動" %><%= f.select :trial_kind, [["支出を増やす", "expense"], ["支出を減らす・収入を増やす", "income"]], selected: @trial_kind %></div>
+      <div><%= f.label :trial_amount, "金額（円）" %><%= f.number_field :trial_amount, value: @trial_amount, min: 0, max: 1000000000, step: 1 %></div>
+      <div><%= f.label :trial_frequency, "頻度" %><%= f.select :trial_frequency, [["一度だけ", "once"], ["毎月", "monthly"]], selected: @trial_frequency %></div>
+      <%= f.submit "影響を見る", class: "button" %><%= link_to "リセット", finance_root_path %>
+    <% end %>
+    <% if @trial_amount %>
+      <p class="muted">一度だけの場合は30日以内に発生、毎月の場合は30日ごとに1回発生すると仮定します。</p>
+      <div class="forecast-grid trial-results">
+        <% @forecast_rows.each do |row| %>
+          <% impact = @trial_amount * (@trial_kind == "expense" ? -1 : 1) * (@trial_frequency == "monthly" ? row[:days] / 30 : 1) %>
+          <div><p><%= row[:days] %>日後</p><strong><%= money(row[:expected] + impact) %></strong><p class="muted">予測から <%= impact.positive? ? "＋" : "" %><%= money(impact) %></p></div>
+        <% end %>
+      </div>
+    <% end %>
+  </details>
+<% elsif @forecast.mixed_dates %>
+  <section class="finance-card"><h2>口座の残高更新日を揃えてください</h2><p>異なる日の残高を使うと予測がずれるため、予測を一時停止しています。各口座の実際の残高を同じ基準日で確認し、更新してください。</p><%= link_to "口座残高を確認", finance_accounts_path, class: "button" %></section>
+<% else %>
+  <section class="finance-card"><h2>まずは口座残高を登録</h2><p>残高と更新日を登録すると、将来の予測が表示されます。</p><%= link_to "資産を追加", new_finance_account_path, class: "button" %></section>
+<% end %>
+<div class="finance-columns">
+  <section class="finance-card"><div class="section-heading"><h2>お金のやること</h2><%= link_to "追加・一覧", finance_tasks_path %></div>
+    <% if @tasks.empty? %><p class="empty">未完了の項目はありません。</p><% end %>
+    <% @tasks.each do |task| %><div class="balance-row"><span><%= link_to task.title, edit_finance_task_path(task) %><small>期限 <%= task.due_on || "未定" %></small></span><%= button_to "完了", finance_task_path(task), method: :patch, params: { money_task: { completed: true } }, class: "button secondary" %></div><% end %>
+  </section>
+  <section class="finance-card"><div class="section-heading"><h2>月ごとの資産推移</h2><%= link_to "記録・一覧", finance_snapshots_path %></div>
+    <% if @snapshots.empty? %><p class="empty">月ごとの残高を記録すると、推移を確認できます。</p><% else %>
+      <% recent = @snapshots.last(6); maximum = [recent.map(&:total).max, 1].max %>
+      <% recent.each do |record| %><div class="history-bar-row"><span><%= record.month.strftime("%Y/%m") %></span><div class="history-track"><div style="width:<%= [[record.total.fdiv(maximum) * 100, 0].max, 100].min %>%"></div></div><strong><%= money(record.total) %></strong></div><% end %>
+      <p class="muted">保存した月次残高の実績です。</p>
+    <% end %>
+  </section>
+</div>
+<details class="finance-card"><summary>予測の前提・残高について</summary>
+  <p>現在の総資産は、口座ごとに登録した残高の合計です。各口座の更新日は異なる場合があります。支出を記録しても自動では減らないため、定期的に残高を更新してください。</p>
+  <p>予測は基準日の翌日から対象日までの「確定・未確定」の収入・カード以外の予定支出・引き落としを含みます。カード利用予定は引き落とし予定として登録してください。日付未定・完了・振替は将来の入出金から除外します。</p>
+  <p>カード支払いは設定した月額 <%= money(@forecast.card_monthly) %> の見積もりと、登録済み引き落とし額の大きい方です。見積もりの範囲内では、日々のカード支出を追加しても予測額が変わらない場合があります。</p>
+  <p>カード以外の生活費は、設定値または直近30日の完了した通常支出 <%= money(@forecast.living_monthly) %> を月額として使います。期間内の通常の予定支出との大きい方を採用し、「旅行・臨時」は追加で差し引きます。円未満は四捨五入しています。ポイントは1pt＝1円相当です。</p>
+  <p>「前回から」は同じログインセッション内の前回の金額との比較です。直近の差額は再読み込み後も残ります。</p>
+</details>

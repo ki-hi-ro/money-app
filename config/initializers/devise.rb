@@ -14,7 +14,7 @@ Devise.setup do |config|
   # confirmation, reset password and unlock tokens in the database.
   # Devise will use the `secret_key_base` as its `secret_key`
   # by default. You can change it below and use your own secret key.
-  # config.secret_key = '73fd7511f716e62885e64cd7a330d3f8237d88d3f084b78c55145a42404414793cc35e7707abfdf45851c32d7a6071cf01de8b765c8e0eb0a7b50f17b7917b19'
+  # Use the application secret_key_base; never hard-code a key here.
 
   # ==> Controller configuration
   # Configure the parent class to the devise controllers.
@@ -24,7 +24,13 @@ Devise.setup do |config|
   # Configure the e-mail address which will be shown in Devise::Mailer,
   # note that it will be overwritten if you use your own mailer class
   # with default "from" parameter.
-  config.mailer_sender = 'please-change-me-at-config-initializers-devise@example.com'
+  config.mailer_sender = ENV.fetch("MAIL_FROM", "MoneyApp <noreply@localhost>")
+  config.paranoid = true
+  config.maximum_attempts = 5
+  config.unlock_strategy = :time
+  config.unlock_in = 15.minutes
+  config.timeout_in = 30.minutes
+  config.remember_for = 2.weeks
 
   # Configure the class responsible to send e-mails.
   # config.mailer = 'Devise::Mailer'
@@ -178,7 +184,7 @@ Devise.setup do |config|
 
   # ==> Configuration for :validatable
   # Range for password length.
-  config.password_length = 6..128
+  config.password_length = 12..128
 
   # Email regex used to validate email formats. It simply asserts that
   # one (and only one) @ exists in the given string. This is mainly
@@ -302,7 +308,7 @@ Devise.setup do |config|
   # apps is `200 OK` and `302 Found` respectively, but new apps are generated with
   # these new defaults that match Hotwire/Turbo behavior.
   # Note: These might become the new default in future versions of Devise.
-  config.responder.error_status = :unprocessable_entity
+  config.responder.error_status = :unprocessable_content
   config.responder.redirect_status = :see_other
 
   # ==> Configuration for :registerable

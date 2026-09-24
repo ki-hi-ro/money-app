@@ -1,0 +1,31 @@
+#!/usr/bin/env ruby
+# Validate without booting Rails, touching the database, or printing secrets.
+require "uri"
+
+required = %w[APP_HOST DATABASE_URL MAIL_FROM SMTP_ADDRESS SMTP_USERNAME SMTP_PASSWORD]
+errors = required.filter_map do |key|
+  "#{key} is missing" if ENV[key].to_s.strip.empty?
+end
+
+host = ENV["APP_HOST"].to_s
+unless host.match?(/\A[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\z/i) && host.include?(".")
+  errors << "APP_HOST must be a hostname without a scheme, path or port"
+end
+
+begin
+  database = URI.parse(ENV["DATABASE_URL"].to_s)
+  unless %w[postgres postgresql].include?(database.scheme) && database.host
+    errors << "DATABASE_URL must point to PostgreSQL"
+  end
+rescue URI::InvalidURIError
+  errors << "DATABASE_URL is invalid"
+end
+
+port = Integer(ENV.fetch("SMTP_PORT", "587"), exception: false)
+errors << "SMTP_PORT must be between 1 and 65535" unless port && (1..65535).cover?(port)
+
+unless errors.empty?
+  abort "Deployment configuration check failed:\n- #{errors.join("\n- ")}"
+end
+
+puts "Deployment configuration check passed. SMTP delivery must be verified separately."

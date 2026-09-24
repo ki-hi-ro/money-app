@@ -1,24 +1,94 @@
-# README
+# MoneyApp
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+Rails 8.1 / Ruby 3.3.12 / PostgreSQL の家計管理アプリです。利用者ごとにログインし、`/finance` から使用します。
 
-Things you may want to cover:
+## このMacで起動
 
-* Ruby version
+既存のローカル環境では次のスクリプトが PostgreSQL とアプリを起動します。
 
-* System dependencies
+```sh
+.local/start.command
+```
 
-* Configuration
+URL: http://127.0.0.1:3001/finance
 
-* Database creation
+既存アカウントと家計データは移行後も利用できます。新規ユーザーの確認メール・再設定メールは、開発環境では外部へ送信せず `.local/mail/` に保存されます。ローカル管理者がファイル内のリンクをブラウザで開いて確認します。このディレクトリは公開・共有しないでください。
 
-* Database initialization
+別環境では依存関係とDB接続を用意して起動します（テストDBと分けてください）。
 
-* How to run the test suite
+```sh
+bundle install
+DATABASE_URL=postgresql://localhost/money_app_development bin/rails db:prepare
+DATABASE_URL=postgresql://localhost/money_app_development bin/rails server -b 127.0.0.1 -p 3001
+```
 
-* Services (job queues, cache servers, search engines, etc.)
+## 初めて利用するとき
 
-* Deployment instructions
+1. アカウントを作成し、確認メールのリンクを開いてログインします。
+2. 資産残高に口座・現金・ポイントを登録します。予測に使う全口座の残高は、同じ基準日の実際の残高で揃えます。
+3. 設定で月額のカード支払見積もりとカード以外の生活費を指定します。新規ユーザーのカード見積もりは0円、生活費は空欄（実績から算出）です。
+4. カード管理でカード名・締め日・支払月を登録します。締め日31は月末、支払月は締め月から当月・翌月・翌々月を選びます。
+5. 入出金・今後の予定を登録します。カード利用と引き落としには、支払い区分と対象カードを選択します。
 
-* ...
+口座残高は手動更新です。入出金を登録しても残高は自動増減しません。月次履歴は保存時点のスナップショットです。ポイントは1pt＝1円相当です。Google Sheetsとの常時同期はありません。
+
+## 予測の計算
+
+- 全口座の共通の残高更新日から30・60・90日後を計算します。更新日が混在すると、誤った基準で予測しないよう案内を表示し、予測を停止します。
+- 「確定」は確定の予定、「見込み込み」は確定＋未確定の予定を含みます。基準日の翌日〜対象日が集計期間です。完了・日付未定・振替は将来の予定から除外します。
+- カード支払いは、利用者の月額見積もり×月数と、登録済みカード引き落とし合計の大きい方です。利用日の支出を再び差し引きません。将来のカード利用は支払日の引き落とし予定にも反映してください。
+- カード以外の生活費は設定値、または直近30日の完了した支出（カード・旅行や臨時を除く）を月額として使います。期間分の見積もりと通常の予定支出合計の大きい方を採用します。
+- 「旅行・臨時」の予定支出と、カード以外の口座引き落としは追加で差し引きます。同じ支払いを通常支出と引き落としの両方には登録しないでください。
+- カード確認額を入力した引き落としは、同じカードの対象期間内の完了した利用記録と照合します。未確定は確認額と利用合計の最大値、確定・完了は確認額を使用します。確認額が空欄なら登録金額を使います。
+- 明細の開始日・終了日を両方指定した場合はその期間を使い、両方空欄ならカードの締め日と支払月から計算します。既存の引き落とし・JSON取り込みは元シートの期間を明細期間として保持します。
+- 「前回から」は同じログインセッション内での直近の異なる予測との比較です。
+
+このMacで設定済みの見積もりはDB内に保持します。初めて移行する別環境と新規ユーザーの見積もりは0円です。個人の予算は設定画面から登録し、ソースコードには保存しません。
+
+## 認証とデータ分離
+
+家計データ・投稿・日記・カード・設定はログイン中の所有者に限定します。別ユーザーのIDを指定しても閲覧・変更・削除できません。所有者が不明な旧投稿・日記は誰にも表示されません（移行時の既存利用者が1人の場合のみ、その利用者に引き継ぎます）。
+
+新規登録にはメール確認が必要です。新しいパスワードは12文字以上です。5回のログイン失敗で15分間ロックし、未操作30分でセッションを失効します。既存ユーザーは再確認なしで継続利用できます。退会すると本人のデータを削除します。
+
+## 公開環境
+
+GitHubリポジトリはコードの保存先です。別途Railsの実行環境、PostgreSQL、HTTPS、SMTPのメール送信環境が必要です。この変更だけではインターネットに公開されません。
+
+`.env.example` の値をホスティング先のシークレット設定に登録してください。アプリは.envを自動では読みません。実際の秘密情報はGitへ追加しないでください。
+
+```sh
+RAILS_ENV=production bundle exec rails assets:precompile
+RAILS_ENV=production bundle exec rails db:migrate
+RAILS_ENV=production bundle exec puma -C config/puma.rb
+```
+
+本番ではHTTPSを強制し、APP_HOSTをメール内リンクのホストとホスト検証に使用します。SMTPはTLSと証明書検証を有効にします。MAIL_FROMは送信サービスで認証済みのアドレスを設定してください。
+
+公開前に実際の送信サービスで登録確認・パスワード再設定の到達、HTTPS経由のログイン、DBバックアップと復元を検証してください。ランタイムと依存ライブラリの更新・脆弱性確認、監視やメール送信量制限は公開基盤に合わせて整備してください。
+
+## 初回データ取り込み
+
+シートの取得結果をJSON（`version`, `assets`, `entries`, `tasks`, `history`）に保存し、登録済み利用者へ取り込みます。
+
+```sh
+EMAIL='your-account@example.com' FILE='/absolute/path/sheet_snapshot.json' bin/rails finance:import
+```
+
+取り込みはトランザクションで実行し、月次合計が合わない場合は全体をロールバックします。同じファイルの再実行で重複は作りませんが、内容を更新します。元シートで行を並べ替えた後の差分同期には使用しないでください。引継ぎカードに複数カードが混在していた場合は、カード管理で分けて各明細を修正してください。
+
+## テスト
+
+必ず開発・本番とは別のテストDBを使用します。
+
+```sh
+RAILS_ENV=test DATABASE_URL=postgresql://localhost/money_app_test bin/rails db:prepare
+RAILS_ENV=test DATABASE_URL=postgresql://localhost/money_app_test PARALLEL_WORKERS=1 bin/rails test
+bin/rails zeitwerk:check
+```
+
+統合テストは登録・メール確認・再設定・ロック・他ユーザーのデータ分離・退会・カード管理を検証します。計算テストはユーザー別予算・予定支出・締め日・うるう年・カード分離・残高更新日の不一致を検証します。
+
+## Herokuへの反映
+
+公開先は https://money-app-khiro-a414f54be759.herokuapp.com/ です。反映前の確認と復旧方針は [Herokuへの反映手順](docs/heroku-deployment.md) を参照してください。Procfileで設定チェック・DB移行とWeb起動を定義しています。

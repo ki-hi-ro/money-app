@@ -33,3 +33,12 @@
 
 # Ignore master key for decrypting credentials and more.
 /config/master.key
+
+# Local finance database, source snapshot and credentials
+/.local/
+
+# Secret environment files
+.env
+.env.*
+!.env.example
+.DS_Store
